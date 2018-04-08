@@ -632,8 +632,12 @@ RIL_onRequestComplete(RIL_Token t, RIL_Errno e, void *response, size_t responsel
         int rwlockRet = pthread_rwlock_rdlock(radioServiceRwlockPtr);
         assert(rwlockRet == 0);
 
-        ret = pRI->pCI->responseFunction((int) socket_id,
-                responseType, pRI->token, e, response, responselen);
+        if (pRI->pCI->responseFunction) {
+            ret = pRI->pCI->responseFunction((int) socket_id,
+                    responseType, pRI->token, e, response, responselen);
+        } else {
+            RLOGE ("No unsolicited response function defined for token %d", pRI->token);
+        }
 
         rwlockRet = pthread_rwlock_unlock(radioServiceRwlockPtr);
         assert(rwlockRet == 0);
@@ -751,59 +755,14 @@ void RIL_onUnsolicitedResponse(int unsolResponse, const void *data,
          * don't forget to update indices when changing something!
          */
         switch (unsolResponse) {
-            case RIL_UNSOL_ENTER_LPM_M7:
-                unsolResponse = RIL_UNSOL_ENTER_LPM;
+            case RIL_UNSOL_RESPONSE_VOICE_RADIO_TECH_CHANGED:
+                unsolResponse = RIL_UNSOL_VOICE_RADIO_TECH_CHANGED;
                 break;
-            case RIL_UNSOL_CDMA_3G_INDICATOR_M7:
-                unsolResponse = RIL_UNSOL_CDMA_3G_INDICATOR;
-                break;
-            case RIL_UNSOL_CDMA_ENHANCE_ROAMING_INDICATOR_M7:
-                unsolResponse = RIL_UNSOL_CDMA_ENHANCE_ROAMING_INDICATOR;
-                break;
-            case RIL_UNSOL_CDMA_NETWORK_BASE_PLUSCODE_DIAL_M7:
-                unsolResponse = RIL_UNSOL_CDMA_NETWORK_BASE_PLUSCODE_DIAL;
-                break;
-            case RIL_UNSOL_RESPONSE_PHONE_MODE_CHANGE_M7:
-                unsolResponse = RIL_UNSOL_RESPONSE_PHONE_MODE_CHANGE;
-                break;
-            case RIL_UNSOL_RESPONSE_DATA_NETWORK_STATE_CHANGED_M7:
-                unsolResponse = RIL_UNSOL_RESPONSE_DATA_NETWORK_STATE_CHANGED;
+            case RIL_UNSOL_VOICE_RADIO_TECH_CHANGED:
+                unsolResponseIndex = unsolResponse - RIL_UNSOL_RESPONSE_BASE;
                 break;
             case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED_HTC:
                 unsolResponse = RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED;
-                break;
-            default:
-                break;
-        }
-
-        int htc_base = 49;
-        switch (unsolResponse) {
-            case RIL_UNSOL_ENTER_LPM:
-                unsolResponseIndex = htc_base + 0;
-                break;
-            case RIL_UNSOL_CDMA_3G_INDICATOR:
-                unsolResponseIndex = htc_base + 1;
-                break;
-            case RIL_UNSOL_CDMA_ENHANCE_ROAMING_INDICATOR:
-                unsolResponseIndex = htc_base + 2;
-                break;
-            case RIL_UNSOL_CDMA_NETWORK_BASE_PLUSCODE_DIAL:
-                unsolResponseIndex = htc_base + 3;
-                break;
-            case RIL_UNSOL_RESPONSE_PHONE_MODE_CHANGE:
-                unsolResponseIndex = htc_base + 4;
-                break;
-            case RIL_UNSOL_RESPONSE_VOICE_RADIO_TECH_CHANGED:
-                unsolResponseIndex = htc_base + 5;
-                break;
-            case RIL_UNSOL_RESPONSE_DATA_NETWORK_STATE_CHANGED:
-                unsolResponseIndex = htc_base + 6;
-                break;
-            case RIL_UNSOL_SECTOR_ID_IND:
-                unsolResponseIndex = htc_base + 7;
-                break;
-            case RIL_UNSOL_TPMR_ID:
-                unsolResponseIndex = htc_base + 8;
                 break;
             case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED:
                 unsolResponseIndex = unsolResponse - RIL_UNSOL_RESPONSE_BASE;
