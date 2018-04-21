@@ -180,7 +180,7 @@ on fs
     mkdir /devlog 0700 root root
     mkdir /ramdump 0700 root root
 
-    mount_all /vendor/etc/fstab.qcom
+    mount_all ./fstab.qcom
 
     wait /dev/block/platform/soc.0/${ro.boot.bootdevice}
     symlink /dev/block/platform/soc.0/${ro.boot.bootdevice} /dev/block/bootdevice
